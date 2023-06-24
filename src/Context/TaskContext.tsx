@@ -1,3 +1,4 @@
+'use client'
 import { Task } from '@/components/taskManager/type';
 import { BASE_URL } from '@/utils/request';
 import axios from 'axios';

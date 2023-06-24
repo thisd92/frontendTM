@@ -1,3 +1,4 @@
+'use client'
 import { validateToken } from '@/services/auth';
 import { useRouter } from 'next/navigation';
 import React, { ReactNode, createContext, useEffect, useState } from 'react';
