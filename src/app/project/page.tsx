@@ -1,4 +1,5 @@
 'use client'
+import { AuthContext, AuthProvider } from '@/Context/AuthContext';
 import AddProject from '@/components/addProject/AddProject';
 import { AddBtn, ListButton } from '@/components/buttons/Buttons';
 import { Project } from '@/components/projectItem/type';
@@ -10,13 +11,15 @@ import { BASE_URL } from '@/utils/request';
 import axios from 'axios';
 import { getCookie } from 'cookies-next';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
 
 
 export default function Project() {
 
     const router = useRouter();
+
+    const { isLogged } = useContext(AuthContext)
 
     const [addProject, setAddProject] = useState(false)
     const [projects, setProjects] = useState<Project[]>([])
@@ -55,22 +58,27 @@ export default function Project() {
     };
 
     useEffect(() => {
+        if(!isLogged) return router.push('/login')
+    }, []);
+
+    useEffect(() => {
         getProjects();
-        authToken({ router })
     }, []);
 
     return (
-        <main className="flex flex-col flex-grow items-center mt-4 w-5/6" >
-            <section className='flex flex-col items-center w-2/6 mb-4'>
-                <div className='flex flex-row justify-around w-3/4'>
-                    <AddBtn active={addProject} onClick={handleAddProject} />
-                    <ListButton active={list} onClick={handleListClick} />
-                </div>
-                {showMessage && <SpanSuccess>Tarefa adicionada com sucesso</SpanSuccess>}
-                {addProject && <AddProject addProjectToList={addProjectToList} getProjects={getProjects} handleAddProject={handleAddProject} />}
-            </section>
-            <SpanError>{errorMsg}</SpanError>
-            {list && <ProjectList projects={projects} getProjects={getProjects} />}
-        </main>
+        <AuthProvider>
+            <main className="flex flex-col flex-grow items-center mt-4 w-5/6" >
+                <section className='flex flex-col items-center w-2/6 mb-4'>
+                    <div className='flex flex-row justify-around w-3/4'>
+                        <AddBtn active={addProject} onClick={handleAddProject} />
+                        <ListButton active={list} onClick={handleListClick} />
+                    </div>
+                    {showMessage && <SpanSuccess>Tarefa adicionada com sucesso</SpanSuccess>}
+                    {addProject && <AddProject addProjectToList={addProjectToList} getProjects={getProjects} handleAddProject={handleAddProject} />}
+                </section>
+                <SpanError>{errorMsg}</SpanError>
+                {list && <ProjectList projects={projects} getProjects={getProjects} />}
+            </main>
+        </AuthProvider>
     )
 }

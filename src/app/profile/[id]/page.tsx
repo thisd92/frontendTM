@@ -1,13 +1,13 @@
 'use client'
-import { useEffect, useState } from "react"
+import { useEffect, useState, useContext } from "react"
 import { useRouter } from "next/navigation"
 import axios from "axios"
 
 import ProfileAdmin from "@/components/profileAdmin/profileAdmin"
 import ProfileUser from "@/components/profileUser/profileUser"
 import { BASE_URL } from "@/utils/request"
-import { authToken } from "@/services/auth"
 import { User } from "@/app/register/type"
+import { AuthContext, AuthProvider } from "@/Context/AuthContext"
 
 interface UserProps {
     params: {
@@ -31,8 +31,10 @@ export default function Profile({ params }: UserProps) {
     const [userData, setUserData] = useState<User>(initialUser);
     const [loading, setLoading] = useState(true);
 
+    const { isLogged } = useContext(AuthContext)
+
     useEffect(() => {
-        authToken({ router })
+        if(!isLogged) return router.push('/login')
         fetchUserData()
     }, [])
 
@@ -59,9 +61,11 @@ export default function Profile({ params }: UserProps) {
     }
 
     return (
-        <main className="flex flex-col flex-grow justify-center">
-            {userData.role === "user" && <ProfileUser user={userData} />}
-            {userData.role === "admin" && <ProfileAdmin user={userData} />}
-        </main>
+        <AuthProvider>
+            <main className="flex flex-col flex-grow justify-center">
+                {userData.role === "user" && <ProfileUser user={userData} />}
+                {userData.role === "admin" && <ProfileAdmin user={userData} />}
+            </main>
+        </AuthProvider>
     )
 }

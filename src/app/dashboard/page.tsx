@@ -1,13 +1,15 @@
 'use client'
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
-import { authToken, getToken } from "@/services/auth";
+
+import { getToken } from "@/services/auth";
 import { BASE_URL } from "@/utils/request";
 import { BarChart, PieChart } from "@/components/charts/charts";
 import TaskCard from "@/components/taskCard/taskCard";
 import { Task } from "../../components/taskManager/type";
 import { useRouter } from "next/navigation";
 import { Project } from "@/components/projectItem/type";
+import { AuthContext, AuthProvider } from "@/Context/AuthContext";
 
 const Dashboard = () => {
     const [tasks, setTasks] = useState([]);
@@ -16,8 +18,13 @@ const Dashboard = () => {
 
     const router = useRouter()
 
+    const { isLogged } = useContext(AuthContext)
+
     useEffect(() => {
-        authToken({ router })
+        if (!isLogged) return router.push('/login')
+    })
+
+    useEffect(() => {
         const fetchData = async () => {
             try {
                 const responseTasks = await axios.get(`${BASE_URL}/api/allTasks`, {
@@ -71,57 +78,59 @@ const Dashboard = () => {
     }
 
     return (
-        <main className="flex flex-grow flex-col items-center h-full w-3/4 my-4 md:w-full">
-            <div>
-                <h1 className="font-bold text-lg">Dashboard</h1>
-            </div>
-            <section className="flex flex-row flex-wrap w-full justify-around mt-4">
-                <div className="flex flex-col items-center rounded-lg shadow-md shadow-gray-400 justify-center w-1/4 bg-gray-100 p-4">
-                    <div className="flex flex-col">
-                        <h2 className="text-xl font-bold">Projects</h2>
-                        <div>
-                            <p className="text-sm">Total: {sumProjects}</p>
-                            <p className="text-sm">To Do: {countProjectsToDo}</p>
-                            <p className="text-sm">Finished: {countProjectsFinished}</p>
+        <AuthProvider>
+            <main className="flex flex-grow flex-col items-center h-full w-3/4 my-4 md:w-full">
+                <div>
+                    <h1 className="font-bold text-lg">Dashboard</h1>
+                </div>
+                <section className="flex flex-row flex-wrap w-full justify-around mt-4">
+                    <div className="flex flex-col items-center rounded-lg shadow-md shadow-gray-400 justify-center w-1/4 bg-gray-100 p-4">
+                        <div className="flex flex-col">
+                            <h2 className="text-xl font-bold">Projects</h2>
+                            <div>
+                                <p className="text-sm">Total: {sumProjects}</p>
+                                <p className="text-sm">To Do: {countProjectsToDo}</p>
+                                <p className="text-sm">Finished: {countProjectsFinished}</p>
+                            </div>
+                        </div>
+                        <div className="flex flex-col mt-4">
+                            <h2 className="text-xl font-bold">Tasks</h2>
+                            <div>
+                                <p className="text-sm">Total: {sumTasks}</p>
+                                <p className="text-sm">To Do: {countToDo}</p>
+                                <p className="text-sm">In Progress: {countInProgress}</p>
+                                <p className="text-sm">Finished: {countFinished}</p>
+                            </div>
                         </div>
                     </div>
-                    <div className="flex flex-col mt-4">
-                        <h2 className="text-xl font-bold">Tasks</h2>
-                        <div>
-                            <p className="text-sm">Total: {sumTasks}</p>
-                            <p className="text-sm">To Do: {countToDo}</p>
-                            <p className="text-sm">In Progress: {countInProgress}</p>
-                            <p className="text-sm">Finished: {countFinished}</p>
+                    <div className="flex items-center rounded-lg shadow-md shadow-gray-400 justify-center w-1/4 bg-gray-100 p-1">
+                        <BarChart
+                            data={[
+                                { label: "To Do", value: countProjectsToDo },
+                                { label: "Finished", value: countProjectsFinished },
+                            ]}
+                        />
+                    </div>
+                    <div className="flex items-center rounded-lg shadow-md shadow-gray-400 justify-center w-1/4 bg-gray-100 p-1">
+                        <PieChart
+                            data={[
+                                { label: "To Do", value: countToDo },
+                                { label: "In Progress", value: countInProgress },
+                                { label: "Finished", value: countFinished },
+                            ]}
+                        />
+                    </div>
+                    <div className="flex flex-col items-center rounded-lg shadow-md shadow-gray-400 justify-center bg-gray-100 p-2 mt-4">
+                        <h2 className="font-bold">Task Board</h2>
+                        <div className="grid grid-cols-3 gap-4">
+                            <TaskCard title="To Do" tasks={tasksToDo} />
+                            <TaskCard title="In Progress" tasks={tasksInProgress} />
+                            <TaskCard title="Finished" tasks={tasksFinished} />
                         </div>
                     </div>
-                </div>
-                <div className="flex items-center rounded-lg shadow-md shadow-gray-400 justify-center w-1/4 bg-gray-100 p-1">
-                    <BarChart
-                        data={[
-                            { label: "To Do", value: countProjectsToDo },
-                            { label: "Finished", value: countProjectsFinished },
-                        ]}
-                    />
-                </div>
-                <div className="flex items-center rounded-lg shadow-md shadow-gray-400 justify-center w-1/4 bg-gray-100 p-1">
-                    <PieChart
-                        data={[
-                            { label: "To Do", value: countToDo },
-                            { label: "In Progress", value: countInProgress },
-                            { label: "Finished", value: countFinished },
-                        ]}
-                    />
-                </div>
-                <div className="flex flex-col items-center rounded-lg shadow-md shadow-gray-400 justify-center bg-gray-100 p-2 mt-4">
-                    <h2 className="font-bold">Task Board</h2>
-                    <div className="grid grid-cols-3 gap-4">
-                        <TaskCard title="To Do" tasks={tasksToDo} />
-                        <TaskCard title="In Progress" tasks={tasksInProgress} />
-                        <TaskCard title="Finished" tasks={tasksFinished} />
-                    </div>
-                </div>
-            </section>
-        </main>
+                </section>
+            </main>
+        </AuthProvider>
     );
 };
 
